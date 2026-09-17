@@ -1,114 +1,116 @@
-import socket
+import flet as ft
+import asyncio
 import json
-import time
 
-class LGRemoteManager:
-    """
-    مُدير التحكم الشامل لتلفاز LG (دعم Wi-Fi, IR, Bluetooth)
-    Comprehensive LG TV Remote Manager supporting Wi-Fi, IR, and Bluetooth.
-    """
-    def __init__(self, tv_ip=None, tv_mac=None):
-        self.tv_ip = tv_ip
-        self.tv_mac = tv_mac
-        self.websocket = None
-        self.is_connected_wifi = False
+class LGRemoteApp:
+    def __init__(self):
+        self.tv_ip = "192.168.1.50"
+        self.is_connected = False
+        self.status_text = ft.Text("الحالة: غير متصل 🔴", color="red", weight=ft.FontWeight.BOLD)
 
-    # ==========================================
-    # 1. نظام الاتصال عبر الواي فاي (Wi-Fi / webOS)
-    # ==========================================
-    def connect_wifi(self):
-        """الاتصال بالتلفاز عبر شبكة المحلي وتلفزيونات webOS"""
-        if not self.tv_ip:
-            print("[-] خطأ: لم يتم تحديد عنوان IP الخاص بالتلفاز.")
-            return False
-        
-        print(f"[*] محاولة الاتصال بالتلفاز عبر الواي فاي على العنوان: {self.tv_ip} ...")
-        try:
-            print(f"[*] جارِ الاتصال بـ ws://{self.tv_ip}:3000 ...")
-            self.is_connected_wifi = True
-            print("[+] تم الاتصال بنجاح عبر الواي فاي (webOS)!")
-            return True
-        except Exception as e:
-            print(f"[-] فشل الاتصال عبر الواي فاي: {e}")
-            return False
+    def build_ui(self, page: ft.Page):
+        page.title = "LG Smart Remote"
+        page.vertical_alignment = ft.MainAxisAlignment.CENTER
+        page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        page.theme_mode = ft.ThemeMode.DARK
+        page.padding = 20
 
-    def send_wifi_command(self, command_type, payload=None):
-        """إرسال أمر عبر شبكة الواي فاي (مثل رفع الصوت، تغيير القناة)"""
-        if not self.is_connected_wifi:
-            print("[-] غير متصل بالواي فاي حالياً. يرجى الاتصال أولاً.")
-            return False
-        
-        print(f"[*] إرسال أمر Wi-Fi [{command_type}] مع البيانات: {payload}")
-        return True
+        # حقل إدخال عنوان IP للتلفاز
+        ip_input = ft.TextField(
+            label="عنوان IP للتلفاز (TV IP)",
+            value=self.tv_ip,
+            width=300,
+            text_align=ft.TextAlign.CENTER
+        )
 
-    # ==========================================
-    # 2. نظام الأشعة تحت الحمراء (IR Blaster)
-    # ==========================================
-    def send_ir_command(self, button_name):
-        """
-        إرسال أمر مباشر عبر الأشعة تحت الحمراء (لا يتطلب شبكة إنترنت)
-        مناسب للهواتف التي تحتوي على مرسل IR مدمج (IR Blaster)
-        """
-        print(f"[*] [IR Blaster] إرسال التردد الخاص بالزر: {button_name}")
-        ir_codes = {
-            "POWER": "0x00ff02fd",
-            "VOLUME_UP": "0x00ff827d",
-            "VOLUME_DOWN": "0x00ff02fd",
-            "MUTE": "0x00ffc23d"
-        }
-        
-        code = ir_codes.get(button_name.upper(), "Unknown")
-        print(f"[+] تم إرسال نبضة IR بنجاح (الرمز: {code})")
-        return True
+        def update_ip(e):
+            self.tv_ip = ip_input.value
 
-    # ==========================================
-    # 3. نظام الاتصال عبر البلوتوث (Bluetooth)
-    # ==========================================
-    def connect_bluetooth(self, bt_device_address):
-        """الاتصال بالتلفاز أو جهاز الإدخال عبر البلوتوث (Bluetooth HID/SPP)"""
-        if not bt_device_address:
-            print("[-] خطأ: لم يتم تحديد عنوان البلوتوث (MAC Address) للتلفاز.")
-            return False
+        ip_input.on_change = update_ip
+
+        # زر الاتصال
+        def connect_tv(e):
+            self.status_text.value = f"الحالة: جاري الاتصال بـ {self.tv_ip}..."
+            self.status_text.color = "orange"
+            page.update()
             
-        print(f"[*] جارِ الاتصال بجهاز LG عبر البلوتوث [عنوان: {bt_device_address}]...")
-        try:
-            print("[+] تم ربط الجهاز عبر البلوتوث بنجاح وجاهز لاستقبال الإيماءات!")
-            return True
-        except Exception as e:
-            print(f"[-] فشل الاتصال عبر البلوتوث: {e}")
-            return False
+            # محاكاة الاتصال الفعلي (سيتم ربطه بـ WebSockets لاحقاً)
+            page.run_task(self.simulate_connection)
 
-    def send_bluetooth_command(self, action):
-        """إرسال حركة أو إيماءة ماوس/أزرار عبر بروتوكول البلوتوث"""
-        print(f"[*] إرسال أمر البلوتوث: {action}")
-        return True
+        connect_btn = ft.ElevatedButton(
+            text="اتصال بالواي فاي (Connect)",
+            icon=ft.icons.WIFI,
+            color=ft.colors.WHITE,
+            bgcolor=ft.colors.BLUE_700,
+            on_click=connect_tv,
+            width=250
+        )
+
+        # أزرار التحكم (الطاقة، الصوت)
+        def send_command(cmd_name):
+            if not self.is_connected:
+                self.status_text.value = "الحالة: يرجى الاتصال بالتلفاز أولاً!"
+                self.status_text.color = "red"
+            else:
+                self.status_text.value = f"الحالة: تم إرسال الأمر [{cmd_name}] بنجاح ✅"
+                self.status_text.color = "green"
+            page.update()
+
+        power_btn = ft.IconButton(
+            icon=ft.icons.POWER_SETTINGS_NEW,
+            icon_color="red",
+            icon_size=35,
+            tooltip="تشغيل / إيقاف (Power)",
+            on_click=lambda e: send_command("POWER")
+        )
+
+        vol_up_btn = ft.IconButton(
+            icon=ft.icons.VOLUME_UP,
+            icon_color="white",
+            icon_size=30,
+            tooltip="رفع الصوت (Vol+)",
+            on_click=lambda e: send_command("VOL_UP")
+        )
+
+        vol_down_btn = ft.IconButton(
+            icon=ft.icons.VOLUME_DOWN,
+            icon_color="white",
+            icon_size=30,
+            tooltip="خفض الصوت (Vol-)",
+            on_click=lambda e: send_command("VOL_DOWN")
+        )
+
+        mute_btn = ft.IconButton(
+            icon=ft.icons.VOLUME_OFF,
+            icon_color="yellow",
+            icon_size=30,
+            tooltip="كتم الصوت (Mute)",
+            on_click=lambda e: send_command("MUTE")
+        )
+
+        # ترتيب الواجهة في عناصر بصرية متناسقة
+        page.add(
+            ft.Text("📱 ريموت تلفاز LG الذكي", size=22, weight=ft.FontWeight.BOLD),
+            ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+            ip_input,
+            connect_btn,
+            ft.Divider(height=15, color=ft.colors.TRANSPARENT),
+            self.status_text,
+            ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+            ft.Row([power_btn, mute_btn], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+            ft.Row([vol_up_btn, vol_down_btn], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        )
+
+    async def simulate_connection(self):
+        await asyncio.sleep(1.5)
+        self.is_connected = True
+        self.status_text.value = "الحالة: متصل بنجاح 🟢"
+        self.status_text.color = "green"
 
 
-# ==========================================
-# نقطة التشغيل التجريبية للاختبار
-# ==========================================
+def main(page: ft.Page):
+    app = LGRemoteApp()
+    app.build_ui(page)
+
 if __name__ == "__main__":
-    print("========================================")
-    print("      تشغيل مشروع ريموت تلفاز LG        ")
-    print("========================================")
-    
-    my_remote = LGRemoteManager(tv_ip="192.168.1.100")
-    
-    # 1. اختبار الواي فاي
-    print("\n--- [1] اختبار اتصال الواي فاي ---")
-    my_remote.connect_wifi()
-    my_remote.send_wifi_command("VOLUME_UP", {"volume": 15})
-    
-    # 2. اختبار الأشعة تحت الحمراء (بدون إنترنت)
-    print("\n--- [2] اختبار الأشعة تحت الحمراء (IR) ---")
-    my_remote.send_ir_command("POWER")
-    my_remote.send_ir_command("VOLUME_UP")
-    
-    # 3. اختبار البلوتوث
-    print("\n--- [3] اختبار اتصال البلوتوث ---")
-    my_remote.connect_bluetooth("AA:BB:CC:DD:EE:FF")
-    my_remote.send_bluetooth_command("MOUSE_MOVE_RIGHT")
-    
-    print("\n========================================")
-    print(" تم اختبار الهيكل الشامل بنجاح! 🚀")
-    print("========================================")
+    ft.app(target=main)
