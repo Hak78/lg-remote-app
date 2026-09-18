@@ -2,42 +2,43 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - name: جلب ملفات المشروع
+        uses: actions/checkout@v4
 
-    - name: إعداد بيئة بايثون
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: إعداد بيئة بايثون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: تثبيت مكتبات المشروع
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: تثبيت مكتبات المشروع
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: إعداد بيئة جافا (للأندرويد)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-    - name: إعداد بيئة Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        channel: 'stable'
+      - name: إعداد بيئة Flutter (المطلوبة لـ Flet)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
-    - name: بناء حزمة التطبيق عبر Flet
-      run: yes | flet build apk
+      - name: بناء تطبيق الـ APK
+        run: yes | flet build apk --org com.hak78 --project-name lg_remote_app
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: LG-Remote-App-APK
-        path: build/apk/**/*.apk
+      - name: رفع ملف الـ APK النهائي للتحميل
+        uses: actions/upload-artifact@v4
+        with:
+          name: LG-Remote-App-APK
+          path: build/apk/**/*.apk
