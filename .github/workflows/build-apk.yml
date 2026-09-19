@@ -28,7 +28,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.22.x'  # تثبيت إصدار مستقر ومتوافق تماماً مع Flet الحديث
+          flutter-version: '3.22.x'
           cache: true
 
       - name: تحديث وتثبيت أدوات Flet ومكتبات المشروع
@@ -36,6 +36,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade flet
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: تثبيت مكتبات النظام الناقصة لتجنب خطأ Flutter Doctor
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev
 
       - name: بناء تطبيق الـ APK
         env:
