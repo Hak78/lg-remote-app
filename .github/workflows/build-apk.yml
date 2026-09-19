@@ -18,23 +18,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: تحديث وتثبيت أدوات Flet ومكتبات المشروع
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade flet
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
       - name: إعداد بيئة جافا (للأندرويد)
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: إعداد بيئة Flutter (المطلوبة لـ Flet)
+      - name: إعداد بيئة Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.22.x'  # تثبيت إصدار مستقر ومتوافق تماماً مع Flet الحديث
           cache: true
+
+      - name: تحديث وتثبيت أدوات Flet ومكتبات المشروع
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade flet
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: بناء تطبيق الـ APK
         env:
@@ -47,4 +48,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: LG-Remote-App-APK
-          path: build/apk/**/*.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/apk/**/*.apk
