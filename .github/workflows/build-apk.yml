@@ -35,7 +35,7 @@ jobs:
           channel: 'stable'
 
       - name: بناء تطبيق الـ APK
-        run: yes | flet build apk
+        run: flet build apk
 
       - name: رفع ملف الـ APK النهائي للتحميل
         uses: actions/upload-artifact@v4
