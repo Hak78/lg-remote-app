@@ -34,20 +34,28 @@ jobs:
       - name: تحديث وتثبيت أدوات Flet ومكتبات المشروع
         run: |
           python -m pip install --upgrade pip
-          pip install --upgrade flet
+          pip install --upgrade flet serious-python
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: تثبيت مكتبات النظام الناقصة لتجنب خطأ Flutter Doctor
+      - name: تثبيت مكتبات النظام اللازمة
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libgtk-3-dev
 
-      - name: بناء تطبيق الـ APK
+      - name: تغليف تطبيق بايثون وبناء الـ APK مباشرة
         env:
           CI: "true"
         run: |
           flutter config --no-analytics
-          flet build apk --verbose
+          
+          # إنشاء قالب فلاتر الخاص بـ Flet إذا لم يكن موجوداً، أو استخدام الحزمة مباشرة
+          flet create . --template=app || true
+          
+          # تغليف ملفات بايثون باستخدام serious_python
+          python -m serious_python.main package . --mobile --platform mobile --dep-mappings flet=flet-embed --req-deps flet-embed --exclude build
+          
+          # بناء ملف الـ APK مباشرة عبر فلاتر
+          flutter build apk --release --no-pub
 
       - name: رفع ملف الـ APK النهائي للتحميل
         uses: actions/upload-artifact@v4
