@@ -24,27 +24,14 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: إعداد بيئة Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: '3.22.x'
-          cache: true
-
-      - name: تثبيت أدوات Flet ومكتبات المشروع
+      - name: تثبيت Flet ومكتبات المشروع
         run: |
           python -m pip install --upgrade pip
-          pip install --upgrade flet
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
 
-      - name: بناء تطبيق الأندرويد APK
-        env:
-          CI: "true"
+      - name: بناء تطبيق الأندرويد باستخدام أداة Flet
         run: |
-          flutter config --no-analytics
-          flutter config --no-enable-linux-desktop
-          flutter config --no-enable-macos-desktop
-          flutter config --no-enable-windows-desktop
+          # استخدام الأمر المباشر لبناء APK الخاص بـ Flet
           flet build apk --verbose
 
       - name: رفع ملف الـ APK النهائي
@@ -52,5 +39,5 @@ jobs:
         with:
           name: LG-Remote-App-APK
           path: |
+            build/apk/*.apk
             build/app/outputs/flutter-apk/*.apk
-            build/apk/**/*.apk
