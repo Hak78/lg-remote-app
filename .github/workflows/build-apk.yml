@@ -43,7 +43,7 @@ jobs:
 
       - name: بناء تطبيق Flet كملف APK
         run: |
-          flet build apk --project-name lg_remote_app --org com.lgremote --description "LG Smart Remote App"
+          flet build apk --project lg_remote_app --org com.lgremote --description "LG Smart Remote App"
 
       - name: رفع ملف الـ APK النهائي
         uses: actions/upload-artifact@v4
