@@ -13,26 +13,12 @@ jobs:
       - name: جلب ملفات المشروع
         uses: actions/checkout@v4
 
-      - name: إعداد بيئة بايثون
-        uses: actions/setup-python@v5
+      - name: بناء تطبيق الأندرويد باستخدام Flet Action
+        uses: flet-dev/flet-build-action@v1
         with:
-          python-version: '3.11'
-
-      - name: إعداد بيئة جافا (للأندرويد)
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: تثبيت Flet ومكتبات المشروع
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: بناء تطبيق الأندرويد باستخدام أداة Flet
-        run: |
-          # استخدام الأمر المباشر لبناء APK الخاص بـ Flet
-          flet build apk --verbose
+          target: apk
+          # تحديد اسم ملف البداية إذا كان مختلفاً عن main.py
+          main-path: main.py
 
       - name: رفع ملف الـ APK النهائي
         uses: actions/upload-artifact@v4
