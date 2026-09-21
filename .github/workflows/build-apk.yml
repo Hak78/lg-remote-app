@@ -39,6 +39,8 @@ jobs:
       - name: قبول رخص أندرويد
         run: |
           flutter config --no-analytics
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
           yes | flutter doctor --android-licenses || true
 
       - name: بناء تطبيق Flet كملف APK
