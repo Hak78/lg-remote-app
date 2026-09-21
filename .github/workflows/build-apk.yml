@@ -13,17 +13,44 @@ jobs:
       - name: جلب ملفات المشروع
         uses: actions/checkout@v4
 
-      - name: بناء تطبيق الأندرويد باستخدام Flet Action
-        uses: flet-dev/flet-build-action@v1
+      - name: إعداد بيئة بايثون
+        uses: actions/setup-python@v5
         with:
-          target: apk
-          # تحديد اسم ملف البداية إذا كان مختلفاً عن main.py
-          main-path: main.py
+          python-version: '3.11'
+
+      - name: إعداد بيئة جافا (للأندرويد)
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: إعداد بيئة Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.22.x'
+          cache: true
+
+      - name: تثبيت مكتبات المشروع و Flet
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet==0.24.0 websockets
+
+      - name: تحويل وتجهيز ملفات بايثون لتطبيق فلاتر
+        run: |
+          # استخدام Flet لتوليد هيكل فلاتر من ملف main.py الخاص بك مباشرة
+          flet create . --project-name lg_remote_app || true
+
+      - name: بناء ملف APK للأندرويد
+        run: |
+          flutter config --no-analytics
+          yes | flutter doctor --android-licenses || true
+          flutter build apk --release
 
       - name: رفع ملف الـ APK النهائي
         uses: actions/upload-artifact@v4
         with:
           name: LG-Remote-App-APK
           path: |
-            build/apk/*.apk
             build/app/outputs/flutter-apk/*.apk
+            bin/build/app/outputs/flutter-apk/*.apk
