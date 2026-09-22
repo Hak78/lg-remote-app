@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Lg-Remote-APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: .buildozer/android/platform/build-armeabi-v7a_arm64-v8a/dists/*__*/bin/*.apk
