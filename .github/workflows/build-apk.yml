@@ -1,4 +1,4 @@
-name: Build Flet Android APK
+name: Build Flet Android APK via Buildozer
 
 on:
   workflow_dispatch:
@@ -16,28 +16,20 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Install Flet and Dependencies
+      - name: Install Buildozer Dependencies
         run: |
-          pip install flet
-          pip install -r requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libstdc++6 libgmp-dev diffutils build-essential
 
-      - name: Build APK
-        run: |
-          flet build apk --project lg_remote_app --org com.lgremote --description "LG Smart Remote App"
+      - name: Build with Buildozer
+        uses: ArtemGovorov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer android debug
+          repository_root: .
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Flet-Android-APK
-          path: build/apk/*.apk
+          name: Lg-Remote-APK
+          path: ${{ steps.buildozer.outputs.filename }}
