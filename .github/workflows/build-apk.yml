@@ -1,7 +1,7 @@
 name: Build Flet Android APK via Buildozer
 
 on:
-  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً بضغطة زر
+  workflow_dispatch:
 
 jobs:
   build:
@@ -32,4 +32,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Lg-Remote-APK
-          path: ${{ steps:buildozer.outputs.filename }}
+          path: .target/crystax*/*/*/*.apk
