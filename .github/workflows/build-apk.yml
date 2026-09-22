@@ -23,7 +23,6 @@ jobs:
 
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
         with:
           command: buildozer android debug
           repository_root: .
@@ -32,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Lg-Remote-APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
